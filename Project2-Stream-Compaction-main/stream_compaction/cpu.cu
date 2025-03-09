@@ -19,7 +19,11 @@ namespace StreamCompaction {
          */
         void scan(int n, int *odata, const int *idata) {
             timer().startCpuTimer();
-            // TODO
+            
+            for (int i = 1; i < n; ++i) {
+                odata[i] = odata[i - 1] + idata[i - 1];
+            }
+
             timer().endCpuTimer();
         }
 
@@ -30,9 +34,15 @@ namespace StreamCompaction {
          */
         int compactWithoutScan(int n, int *odata, const int *idata) {
             timer().startCpuTimer();
-            // TODO
+            
+            int p = 0;
+            for (int i = 0; i < n; ++i) {
+                if (idata[i] != 0)
+                    odata[p++] = idata[i];
+            }
+
             timer().endCpuTimer();
-            return -1;
+            return p;
         }
 
         /**
@@ -42,9 +52,34 @@ namespace StreamCompaction {
          */
         int compactWithScan(int n, int *odata, const int *idata) {
             timer().startCpuTimer();
-            // TODO
+            
+            // scan
+            int* scan = new int[n];
+            for (int i = 0; i < n; ++i) {
+                scan[i] = idata[i] == 0 ? 0 : 1;
+            }
+
+            // exclusive prefix sum
+            int* exclusivePrefixSum = new int[n];
+            exclusivePrefixSum[0] = 0;
+            for (int i = 1; i < n; ++i) {
+                exclusivePrefixSum[i] = exclusivePrefixSum[i - 1] + scan[i - 1];
+            }
+
+            // scatter
+            int cnt = 0;
+            for (int i = 0; i < n; ++i) {
+                if (scan[i] != 0) {
+                    odata[exclusivePrefixSum[i]] = idata[i];
+                    ++cnt;
+                }
+            }
+
+            delete[] scan;
+            delete[] exclusivePrefixSum;
+
             timer().endCpuTimer();
-            return -1;
+            return cnt;
         }
     }
 }
