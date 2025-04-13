@@ -2,7 +2,7 @@
 
 __host__ __device__ glm::vec3 calculateRandomDirectionInHemisphere(
     glm::vec3 normal,
-    thrust::default_random_engine &rng)
+    thrust::default_random_engine& rng)
 {
     thrust::uniform_real_distribution<float> u01(0, 1);
 
@@ -41,13 +41,28 @@ __host__ __device__ glm::vec3 calculateRandomDirectionInHemisphere(
 }
 
 __host__ __device__ void scatterRay(
-    PathSegment & pathSegment,
+    PathSegment& pathSegment,
     glm::vec3 intersect,
     glm::vec3 normal,
-    const Material &m,
-    thrust::default_random_engine &rng)
+    const Material& m,
+    thrust::default_random_engine& rng)
 {
     // TODO: implement this.
     // A basic implementation of pure-diffuse shading will just call the
     // calculateRandomDirectionInHemisphere defined above.
+    pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
+    pathSegment.ray.origin = intersect;
+
+    // If the material indicates that the object was a light
+    if (m.emittance > 0.0f) {
+        pathSegment.color *= (m.color * m.emittance);
+        pathSegment.remainingBounces = 0;
+    }
+    else {
+		float cosTerm = glm::dot(normal, pathSegment.ray.direction);
+        glm::vec3 f = m.color / PI;
+        float pdf = 1 / PI * cosTerm;
+        pathSegment.color *= (cosTerm * f / pdf);
+    }
 }
+
