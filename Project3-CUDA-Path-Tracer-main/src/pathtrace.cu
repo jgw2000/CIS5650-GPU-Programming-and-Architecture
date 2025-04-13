@@ -301,6 +301,15 @@ struct if_terminated
     }
 };
 
+struct sort_material
+{
+    __host__ __device__
+	bool operator()(const ShadeableIntersection& si1, const ShadeableIntersection& si2)
+	{
+		return si1.materialId < si2.materialId;
+	}
+};
+
 /**
  * Wrapper for the __global__ call that sets up the kernel calls and does a ton
  * of memory management
@@ -390,6 +399,8 @@ void pathtrace(uchar4* pbo, int frame, int iter)
         // TODO: compare between directly shading the path segments and shading
         // path segments that have been reshuffled to be contiguous in memory.
 
+        // thrust::sort_by_key(thrust::device, dev_intersections, dev_intersections + num_paths, dev_paths, sort_material());
+
         shadeMaterial<<<numblocksPathSegmentTracing, blockSize1d>>>(
             iter,
             num_paths,
@@ -398,6 +409,7 @@ void pathtrace(uchar4* pbo, int frame, int iter)
             dev_materials
         );
 
+        // Stream Conpaction
         thrust::device_ptr<PathSegment> thrust_dev_paths(dev_paths);
         thrust::device_ptr<PathSegment> end = thrust::stable_partition(
             thrust::device,
