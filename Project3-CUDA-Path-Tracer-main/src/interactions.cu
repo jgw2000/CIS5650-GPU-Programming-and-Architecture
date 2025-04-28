@@ -40,6 +40,44 @@ __host__ __device__ glm::vec3 calculateRandomDirectionInHemisphere(
         + sin(around) * over * perpendicularDirection2;
 }
 
+__host__ __device__ void lambertianDiffuse(
+    PathSegment& pathSegment,
+    glm::vec3 intersect,
+    glm::vec3 normal,
+    const Material& m,
+    thrust::default_random_engine& rng
+)
+{
+    pathSegment.ray.origin = intersect;
+    pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
+
+    float cosTerm = glm::dot(normal, pathSegment.ray.direction);
+    glm::vec3 f = m.color / PI;     // brdf = albedo / pi
+    float pdf = 1 / PI * cosTerm;   // cosine-weight hemisphere sampling
+    pathSegment.color *= (cosTerm * f / pdf);
+}
+
+__host__ __device__ void perfectMirror(
+    PathSegment& pathSegment,
+    glm::vec3 intersect,
+    glm::vec3 normal,
+    const Material& m
+)
+{
+    pathSegment.ray.origin = intersect;
+    pathSegment.ray.direction = glm::reflect(pathSegment.ray.direction, normal);
+
+    // Fresnel equation
+    auto F0 = m.color;
+    auto F90 = glm::vec3(1.0f, 1.0f, 1.0f);
+    float cosTheta_i = glm::dot(normal, pathSegment.ray.direction);
+    glm::vec3 fresnel = F0 + (F90 - F0) * (float)pow(1 - cosTheta_i, 5);
+
+    // fr * cosθ = fresnel / cosθ * cosθ = fresnel
+    // pdf = 1
+    pathSegment.color *= fresnel;
+}
+
 __host__ __device__ void scatterRay(
     PathSegment& pathSegment,
     glm::vec3 intersect,
@@ -47,22 +85,16 @@ __host__ __device__ void scatterRay(
     const Material& m,
     thrust::default_random_engine& rng)
 {
-    // TODO: implement this.
-    // A basic implementation of pure-diffuse shading will just call the
-    // calculateRandomDirectionInHemisphere defined above.
-    pathSegment.ray.direction = calculateRandomDirectionInHemisphere(normal, rng);
-    pathSegment.ray.origin = intersect;
-
     // If the material indicates that the object was a light
     if (m.emittance > 0.0f) {
         pathSegment.color *= (m.color * m.emittance);
         pathSegment.remainingBounces = 0;
     }
+    else if (m.hasReflective) {
+        perfectMirror(pathSegment, intersect, normal, m);
+    }
     else {
-		float cosTerm = glm::dot(normal, pathSegment.ray.direction);
-        glm::vec3 f = m.color / PI;
-        float pdf = 1 / PI * cosTerm;
-        pathSegment.color *= (cosTerm * f / pdf);
+        lambertianDiffuse(pathSegment, intersect, normal, m, rng);
     }
 }
 
