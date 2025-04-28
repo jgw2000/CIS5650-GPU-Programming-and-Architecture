@@ -5,5 +5,7 @@
 
 ## Project3-CUDA-Path-Tracer
 ### Lambertian Diffuse Model
-**Cosine Weighted Hemisphere Sampling**
 ![](https://github.com/jgw2000/CIS5650-GPU-Programming-and-Architecture/blob/main/Project3-CUDA-Path-Tracer-main/img/lambertian_diffuse.png)
+
+### Perfect Mirror Model
+![](https://github.com/jgw2000/CIS5650-GPU-Programming-and-Architecture/blob/main/Project3-CUDA-Path-Tracer-main/img/perfect_mirror_.png)
