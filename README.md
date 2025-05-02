@@ -10,4 +10,4 @@
 
 ### Perfect Mirror Model
 
-![](https://github.com/jgw2000/CIS5650-GPU-Programming-and-Architecture/blob/main/Project3-CUDA-Path-Tracer-main/img/perfect_mirror_.png)
+![](https://github.com/jgw2000/CIS5650-GPU-Programming-and-Architecture/blob/main/Project3-CUDA-Path-Tracer-main/img/perfect_mirror.png)
